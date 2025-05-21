@@ -10,9 +10,10 @@ import SwiftUI
 struct ProductDetailView: View {
     
     let product: ProductType
-    
     @State private var productQuantity: Int = 1
 
+    var service = HomeService()
+    
     var body: some View {
         VStack {
             ProductDetailHeaderView(product: product)
@@ -23,10 +24,32 @@ struct ProductDetailView: View {
             
             Spacer()
             
-            ProductDetailButtonView()
+            ProductDetailButtonView {
+                Task {
+                    await confirmOrder()
+                }
+                
+            }
             
         }
     }
+    
+    func confirmOrder() async {
+        
+        do {
+            let result = try await service.confirmOrder(product: product)
+            switch result {
+                case .success(let message):
+                    print(message!)
+                case .failure(let error):
+                    print(error)
+            }
+        } catch {
+            print(error.localizedDescription)
+        }
+        
+    }
+    
 }
 
 #Preview {
@@ -34,11 +57,16 @@ struct ProductDetailView: View {
 }
 
 struct ProductDetailButtonView: View {
+    
+    var onButtonPress: () -> Void
+    
     var body: some View {
-        Button {} label: {
+        Button {
+            onButtonPress()
+        } label: {
             HStack {
                 Image(systemName: "cart")
-                Text("Adicionar ao carrinho")
+                Text("Enviar pedido")
             }
             .padding(.horizontal, 32)
             .padding(.vertical, 16)
